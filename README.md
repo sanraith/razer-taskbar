@@ -22,3 +22,4 @@ Inspired by [Tekk-Know/RazerBatteryTaskbar](https://github.com/Tekk-Know/RazerBa
 * RazerBatteryTaskbar: <https://github.com/Tekk-Know/RazerBatteryTaskbar>
 * OpenRazer <https://github.com/openrazer/openrazer>
 * Hsutungyu <https://github.com/hsutungyu/razer-mouse-battery-windows>
+* Battery icons created by [Vectorslab - Flaticon](https://www.flaticon.com/free-icons/battery)</a>
