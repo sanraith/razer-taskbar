@@ -1,7 +1,7 @@
-import { Menu, MenuItem, MenuItemConstructorOptions, Tray, app, nativeImage } from 'electron';
+import { Menu, MenuItem, MenuItemConstructorOptions, NativeImage, Tray, app, nativeImage } from 'electron';
 import { RazerDevice } from './razer_watcher';
-import path from 'path';
-import { assertNever, resourcesPath } from './utils';
+import { assertNever } from './utils';
+import { BATTERY_CHARGING_IMAGE_PATHS, BATTERY_IMAGE_PATHS } from './resources';
 
 interface TrayItem {
     tray: Tray;
@@ -9,7 +9,9 @@ interface TrayItem {
     devices: RazerDevice[];
 }
 
-const BATTERY_IMAGE = nativeImage.createFromPath(path.join(resourcesPath, 'assets', 'battery.png'));
+type BatteryImages = { [Property in keyof typeof BATTERY_IMAGE_PATHS]: NativeImage };
+const BATTERY_IMAGES = Object.fromEntries(Object.entries(BATTERY_IMAGE_PATHS).map(([k, v]) => [k, nativeImage.createFromPath(v)])) as BatteryImages;
+const BATTERY_CHARGING_IMAGES = Object.fromEntries(Object.entries(BATTERY_CHARGING_IMAGE_PATHS).map(([k, v]) => [k, nativeImage.createFromPath(v)])) as BatteryImages;
 const NO_DEVICE_HANDLE = 'HANDLE_NO_DEVICE';
 const SINGLE_TRAY_HANDLE = 'HANDLE_SINGLE_TRAY';
 
@@ -43,14 +45,14 @@ export default class TrayManager {
             [...this.trayItems.keys()].filter(h => h !== SINGLE_TRAY_HANDLE).forEach(h => this.removeTrayItem(h));
             if (!this.trayItems.has(SINGLE_TRAY_HANDLE)) {
                 this.trayItems.set(SINGLE_TRAY_HANDLE, {
-                    tray: new Tray(BATTERY_IMAGE),
+                    tray: new Tray(BATTERY_IMAGES.unknown),
                     handle: SINGLE_TRAY_HANDLE,
                     devices: []
                 });
             }
             this.trayItems.get(SINGLE_TRAY_HANDLE).devices = [...connectedDevices.values()].sort((a, b) => a.name.localeCompare(b.name));
         }
-        this.updateTrayContent();
+        this.updateTrayContents();
     }
 
     onDeviceUpdateMultiTray(connectedDevices: Map<string, RazerDevice>) {
@@ -63,16 +65,16 @@ export default class TrayManager {
 
         for (const handle of handlesToAdd) {
             this.trayItems.set(handle, {
-                tray: new Tray(BATTERY_IMAGE),
+                tray: new Tray(BATTERY_IMAGES.unknown),
                 handle,
                 devices: [connectedDevices.get(handle)]
             });
         }
 
-        this.updateTrayContent();
+        this.updateTrayContents();
     }
 
-    updateTrayContent() {
+    updateTrayContents() {
         this.addRemoveEmptyTrayIfNeeded();
 
         for (const { tray, devices } of this.trayItems.values()) {
@@ -91,6 +93,7 @@ export default class TrayManager {
             const device = pickDeviceToDisplay(devices);
             if (device) {
                 tray.setToolTip(`${device.name}: ${device.batteryPercentage}% ${device.isCharging ? '(charging)' : ''}`);
+                tray.setImage(getTrayIcon(device));
             } else {
                 tray.setToolTip(`No devices found.`);
             }
@@ -100,7 +103,7 @@ export default class TrayManager {
     private addRemoveEmptyTrayIfNeeded() {
         if (this.trayItems.size === 0) {
             this.trayItems.set(NO_DEVICE_HANDLE, {
-                tray: new Tray(BATTERY_IMAGE),
+                tray: new Tray(BATTERY_IMAGES.unknown),
                 handle: NO_DEVICE_HANDLE,
                 devices: []
             });
@@ -118,4 +121,11 @@ export default class TrayManager {
 /** Pick the device with the lowest battery, preferring ones that are not charging. */
 function pickDeviceToDisplay(devices: RazerDevice[]): RazerDevice | undefined {
     return devices.sort((a, b) => a.batteryPercentage * (a.isCharging ? 100 : 1) - b.batteryPercentage * (b.isCharging ? 100 : 1))[0];
+}
+
+function getTrayIcon(device: RazerDevice) {
+    const imagePercentage = Math.max(0, Math.min(4, Math.floor(device.batteryPercentage / 20))) * 25 as keyof BatteryImages;
+    return device.isCharging ?
+        BATTERY_CHARGING_IMAGES[imagePercentage] :
+        BATTERY_IMAGES[imagePercentage];
 }
