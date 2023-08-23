@@ -101,6 +101,8 @@ export default class TrayManager {
     }
 
     private addRemoveEmptyTrayIfNeeded() {
+        // TODO Use a persistent icon instead of re-creating
+
         if (this.trayItems.size === 0) {
             this.trayItems.set(NO_DEVICE_HANDLE, {
                 tray: new Tray(BATTERY_IMAGES.unknown),
