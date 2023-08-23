@@ -1,8 +1,9 @@
 import fs from 'fs';
 import fsa from 'fs/promises';
 import _ from 'lodash';
+import TrayManager from './tray_manager';
 
-interface RazerDevice {
+export interface RazerDevice {
     name: string;
     handle: string;
     batteryPercentage: number;
@@ -10,21 +11,10 @@ interface RazerDevice {
     isConnected: boolean;
 }
 
-function getLastMatchByHandle(regex: RegExp, text: string): Map<string, RegExpExecArray> {
-    const map: Map<string, RegExpExecArray> = new Map();
-    let match;
-    while ((match = regex.exec(text))) {
-        const handle = match.groups.handle;
-        map.set(handle, match);
-    }
-
-    return map;
-}
-
 export default class RazerWatcher {
     private watcher: fs.FSWatcher | null = null;
 
-    constructor(private logPath: string) { }
+    constructor(private trayManager: TrayManager, private logPath: string) { }
 
     start() {
         const throttledOnLogChanged = _.throttle(() => this.onLogChanged(), 30000, { leading: true });
@@ -70,7 +60,19 @@ export default class RazerWatcher {
         }
 
         console.log(devices);
+        this.trayManager.onDeviceUpdate(devices);
 
         return [...devices.values()];
     }
+}
+
+function getLastMatchByHandle(regex: RegExp, text: string): Map<string, RegExpExecArray> {
+    const map: Map<string, RegExpExecArray> = new Map();
+    let match;
+    while ((match = regex.exec(text))) {
+        const handle = match.groups.handle;
+        map.set(handle, match);
+    }
+
+    return map;
 }
