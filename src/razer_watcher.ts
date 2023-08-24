@@ -3,6 +3,9 @@ import fsa from 'fs/promises';
 import _ from 'lodash';
 import TrayManager from './tray_manager';
 
+/** Minimum milliseconds to wait at least between checking the log file on changes. */
+const LOG_THROTTLE_MILLISECONDS = 30000;
+
 export interface RazerDevice {
     name: string;
     handle: string;
@@ -17,7 +20,7 @@ export default class RazerWatcher {
     constructor(private trayManager: TrayManager, private logPath: string) { }
 
     start() {
-        const throttledOnLogChanged = _.throttle(() => this.onLogChanged(), 30000, { leading: true });
+        const throttledOnLogChanged = _.throttle(() => this.onLogChanged(), LOG_THROTTLE_MILLISECONDS, { leading: true });
         this.watcher = fs.watch(this.logPath, throttledOnLogChanged);
         this.onLogChanged();
     }
@@ -51,8 +54,8 @@ export default class RazerWatcher {
         const deviceRemovedMatches = getLastMatchByHandle(deviceRemovedRegex, log);
         const connectionHandles = new Set([...deviceLoadedMatches.keys(), ...deviceRemovedMatches.keys()]);
         for (const handle of connectionHandles) {
-            const loadedIndex = deviceLoadedMatches.get(handle)?.index ?? 0;
-            const removedIndex = deviceRemovedMatches.get(handle)?.index ?? 0;
+            const loadedIndex = deviceLoadedMatches.get(handle)?.index ?? -1;
+            const removedIndex = deviceRemovedMatches.get(handle)?.index ?? -1;
             const device = devices.get(handle);
             if (device) {
                 device.isConnected = loadedIndex > removedIndex;
