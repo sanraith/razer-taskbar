@@ -1,5 +1,5 @@
 {
-  "name": "razer-taskbar",
+  "name": "razor-taskbar",
   "version": "1.0.0",
   "description": "Display the battery state of Razer products using log messages from Razer Synapse.",
   "main": ".webpack/main",
@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "typed-emitter": "^2.1.0"
   }
 }

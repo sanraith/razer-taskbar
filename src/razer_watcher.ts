@@ -2,9 +2,7 @@ import fs from 'fs';
 import fsa from 'fs/promises';
 import _ from 'lodash';
 import TrayManager from './tray_manager';
-
-/** Minimum milliseconds to wait at least between checking the log file on changes. */
-const LOG_THROTTLE_MILLISECONDS = 30000;
+import { getSettings, settingsChanges } from './settings_manager';
 
 export interface RazerDevice {
     name: string;
@@ -17,12 +15,19 @@ export interface RazerDevice {
 export default class RazerWatcher {
     private watcher: fs.FSWatcher | null = null;
 
-    constructor(private trayManager: TrayManager, private logPath: string) { }
+    constructor(private trayManager: TrayManager, private logPath: string) {
+        settingsChanges.on('pollingThrottleSeconds', () => {
+            this.stop();
+            this.start();
+        });
+    }
 
     start() {
-        const throttledOnLogChanged = _.throttle(() => this.onLogChanged(), LOG_THROTTLE_MILLISECONDS, { leading: true });
-        this.watcher = fs.watch(this.logPath, throttledOnLogChanged);
-        this.onLogChanged();
+        getSettings().then(settings => {
+            const throttledOnLogChanged = _.throttle(() => this.onLogChanged(), settings.pollingThrottleSeconds, { leading: true });
+            this.watcher = fs.watch(this.logPath, throttledOnLogChanged);
+            this.onLogChanged();
+        });
     }
 
     stop() {
