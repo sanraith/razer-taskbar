@@ -3,12 +3,68 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Hello World!</title>
+  <title>Razor Taskbar - Settings</title>
 </head>
 
 <body>
-  <h1>💖 Hello World!</h1>
-  <p>Welcome to your Electron application.</p>
+  <div class="container">
+    <h2>Razor Taskbar Settings</h2>
+    <form>
+      <p>
+        <label for="run_at_startup_checkbox" style="display: contents;">
+          Run at startup
+          <input id="run_at_startup_checkbox" type="checkbox">
+        </label>
+      </p>
+
+      <p>
+        <label for="polling_throttle">
+          Update battery status at most every
+          <select id="polling_throttle" name="polling_throttle">
+            <option value="1">1 second</option>
+            <option value="5">5 seconds</option>
+            <option value="15" selected>15 seconds</option>
+            <option value="30">30 seconds</option>
+            <option value="60">1 minute</option>
+            <option value="300">5 minutes</option>
+            <option value="900">15 minutes</option>
+            <option value="1800">30 minutes</option>
+            <option value="3600">1 hour</option>
+            <option value="7200">2 hours</option>
+            <option value="14400">4 hours</option>
+          </select>
+        </label>
+      </p>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      /** @type {{
+       *     runAtStartup: boolean;
+       *     pollingThrottleSeconds: number;
+       * }} */
+      const settings = (await window?.trayApp?.getSettings()) ?? { runAtStartup: false, pollingThrottleSeconds: 15 };
+
+      const runAtStartupCheckbox = document.getElementById('run_at_startup_checkbox');
+      runAtStartupCheckbox.checked = settings.runAtStartup;
+
+      const throttleSelect = document.getElementById('polling_throttle');
+      throttleSelect.value = settings.pollingThrottleSeconds.toString();
+
+      runAtStartupCheckbox.addEventListener('change', async (event) => {
+        const isChecked = event.target.checked;
+        await window?.trayApp?.updateSettings({ runAtStartup: isChecked });
+        console.log(`Run at startup status: ${isChecked}`);
+      });
+
+      throttleSelect.addEventListener('change', async (event) => {
+        const selectedValue = event.target.value;
+        await window?.trayApp?.updateSettings({ pollingThrottleSeconds: parseInt(selectedValue) });
+        console.log(`Selected throttle: ${selectedValue}`);
+      });
+    });
+  </script>
 </body>
 
 </html>

@@ -3,6 +3,7 @@ import path from 'path';
 
 export const RESOURCES_PATH = app.isPackaged ? process.resourcesPath : __dirname;
 export const ASSETS_PATH = path.join(RESOURCES_PATH, 'assets');
+export const DATA_PATH = app.getPath('userData');
 
 export const BATTERY_IMAGE_PATHS = {
     0: path.join(ASSETS_PATH, 'battery0_@2x.png'),

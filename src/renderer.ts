@@ -30,8 +30,8 @@ import './index.css';
 
 declare global {
     // Let typescript know we are storing something in the global window
-    interface Window { versions: object; }
+    interface Window { trayApp: object; }
 }
 
 console.log('👋 This message is being logged by "renderer.js", included via webpack');
-console.log(window.versions);
+console.log(window.trayApp);

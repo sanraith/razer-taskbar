@@ -22,6 +22,8 @@ export default class TrayManager {
     trayItems = new Map<string, TrayItem>();
     mode: TrayType = 'single';
 
+    constructor(private staticMenuItems: (MenuItemConstructorOptions | MenuItem)[]) { }
+
     onDeviceUpdate(devices: Map<string, RazerDevice>) {
         const connectedDevices = new Map([...devices.entries()].filter(([, v]) => v.isConnected));
         // const connectedDevices = devices;
@@ -75,7 +77,7 @@ export default class TrayManager {
                 { label: '--- Razer Taskbar ---', type: 'normal', enabled: false },
                 ...deviceStatusMenuItems,
                 { type: 'separator' },
-                { label: 'Quit', role: 'quit', type: 'normal', click: () => { if (process.platform !== 'darwin') { app.quit(); } } }
+                ...this.staticMenuItems,
             ]);
             tray.setContextMenu(menu);
 
