@@ -17,11 +17,7 @@ if (require('electron-squirrel-startup')) {
   quit();
 }
 
-settingsChanges.on('runAtStartup', async () => app.setLoginItemSettings({
-  openAtLogin: (await getSettings()).runAtStartup,
-}));
-
-app.on('before-quit', (e) => {
+app.on('before-quit', e => {
   if (!isIntentionalQuit) {
     e.preventDefault();
   }
@@ -30,8 +26,8 @@ app.on('before-quit', (e) => {
 const createSettingsWindow = (): void => {
   // Create the browser window.
   const settingsWindow = new BrowserWindow({
-    height: 400,
-    width: 600,
+    height: 600,
+    width: 800,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     }
@@ -52,6 +48,10 @@ app.on('ready', () => {
 
   const razerWatcher = new RazerWatcher(trayManager, path.resolve(process.env.LOCALAPPDATA, 'Razer', 'Synapse3', 'Log', 'Razer Synapse 3.log'));
   razerWatcher.start();
+
+  settingsChanges.on('_defaultSettingsCreated', () => createSettingsWindow());
+  settingsChanges.on('runAtStartup', async value => app.setLoginItemSettings({ openAtLogin: value }));
+  void getSettings();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

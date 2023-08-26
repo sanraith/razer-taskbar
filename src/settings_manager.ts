@@ -1,5 +1,5 @@
 import fsa from 'fs/promises';
-import { DATA_PATH as USER_DATA_PATH } from './resources';
+import { USER_DATA_PATH } from './resources';
 import path from 'path';
 import { ipcMain } from 'electron';
 import { EventEmitter } from 'node:events';
@@ -7,19 +7,21 @@ import TypedEventEmitter from 'typed-emitter';
 
 const SETTINGS_FILE_PATH = path.join(USER_DATA_PATH, 'settings.json');
 
-let settings: AppSettings | null = null;
+let _settings: AppSettings | null = null;
 
 // Notify subscribers about settings changes
 class SettingsEmitter extends EventEmitter { }
-type MessageEvents = { [Property in keyof AppSettings]: (value: Property) => void };
+type MessageEvents = { [Property in keyof AppSettings]: (value: AppSettings[Property]) => void } & {
+    '_defaultSettingsCreated': () => void;
+};
 export const settingsChanges = new SettingsEmitter() as TypedEventEmitter<MessageEvents>;
 
 // Handle updates from renderer
 ipcMain.handle('getSettings', async () => {
     return await getSettings();
 });
-ipcMain.handle('updateSettings', (_, updates: Partial<AppSettings>) => {
-    return updateSettings(updates);
+ipcMain.handle('updateSettings', async (_, updates: Partial<AppSettings>) => {
+    return await updateSettings(updates);
 });
 
 export interface AppSettings {
@@ -28,28 +30,43 @@ export interface AppSettings {
 }
 
 export async function getSettings(): Promise<AppSettings> {
-    if (!settings) {
-        let settingsString = '';
-        try {
-            settingsString = await fsa.readFile(SETTINGS_FILE_PATH, { encoding: 'utf8' });
-            settings = JSON.parse(settingsString);
-            assertSettings(settings);
-        } catch (e) {
-            settings = createDefaultSettings();
-            settingsString = JSON.stringify(settings);
-            await fsa.writeFile(SETTINGS_FILE_PATH, settingsString);
-        }
+    if (!_settings) {
+        await loadSettings();
     }
 
-    return { ...settings };
+    return { ..._settings };
 }
 
-export function updateSettings(changes: Partial<AppSettings>) {
+export async function updateSettings(changes: Partial<AppSettings>) {
     console.log(changes);
-    settings = { ...settings, ...changes };
+    _settings = { ...await getSettings(), ...changes };
+    Object.entries(changes).map(([k, v]) => settingsChanges.emit(k as keyof AppSettings, v));
+    await saveSettings();
+}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Object.entries(changes).map(([k, v]) => settingsChanges.emit(k as keyof AppSettings, v as any));
+async function loadSettings() {
+    _settings = createDefaultSettings();
+
+    let settingsString = '';
+    try {
+        settingsString = await fsa.readFile(SETTINGS_FILE_PATH, { encoding: 'utf8' });
+        const loaded = JSON.parse(settingsString);
+        assertSettings(loaded);
+        await updateSettings(loaded);
+    } catch (e) {
+        await updateSettings(_settings);
+        await saveSettings();
+        settingsChanges.emit('_defaultSettingsCreated');
+    }
+}
+
+async function saveSettings() {
+    const settingsString = JSON.stringify(_settings);
+    try {
+        await fsa.writeFile(SETTINGS_FILE_PATH, settingsString);
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 function assertSettings(settings: AppSettings) {
