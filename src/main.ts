@@ -17,7 +17,7 @@ if (require('electron-squirrel-startup')) {
   quit();
 }
 
-app.on('before-quit', e => {
+app.on('will-quit', e => {
   if (!isIntentionalQuit) {
     e.preventDefault();
   }
