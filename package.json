@@ -1,5 +1,5 @@
 {
-  "name": "razor-taskbar",
+  "name": "razer-taskbar",
   "version": "1.0.0",
   "description": "Display the battery state of Razer products using log messages from Razer Synapse.",
   "main": ".webpack/main",
@@ -10,8 +10,9 @@
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
-  "author": "Soma Zsják",
+  "author": "sanraith",
   "license": "MIT",
+  "repository": "https://github.com/sanraith/razer-taskbar",
   "devDependencies": {
     "@electron-forge/cli": "^6.4.1",
     "@electron-forge/maker-deb": "^6.4.1",
