@@ -1,6 +1,6 @@
 {
   "name": "razer-taskbar",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "Display the battery state of Razer products using log messages from Razer Synapse.",
   "main": ".webpack/main",
   "scripts": {

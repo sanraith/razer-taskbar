@@ -24,13 +24,22 @@ app.on('will-quit', e => {
 });
 
 const createSettingsWindow = (): void => {
+  // Focus current window if it is open already.
+  if (BrowserWindow.getAllWindows().length > 0) {
+    BrowserWindow.getAllWindows()[0].focus();
+    return;
+  }
+
   // Create the browser window.
   const settingsWindow = new BrowserWindow({
     height: 600,
     width: 800,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-    }
+    },
+    resizable: false,
+    center: true,
+    fullscreenable: false,
   });
   settingsWindow.removeMenu();
   // mainWindow.webContents.openDevTools();
