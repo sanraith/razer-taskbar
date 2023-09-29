@@ -18,7 +18,7 @@
       </p>
       <p>
         <label for="list_devices">
-          Device show:
+          Show device:
           <select id="list_devices" name="list_devices">
             <option value="">Automatic</option>
           </select>
@@ -51,16 +51,16 @@
        *     runAtStartup: boolean;
        *     pollingThrottleSeconds: number;
        * }} */
-      const settings = (await window?.trayApp?.getSettings()) ?? { deviceShow: '', runAtStartup: false, pollingThrottleSeconds: 15 };
+      const settings = (await window?.trayApp?.getSettings()) ?? { shownDeviceHandle: '', runAtStartup: false, pollingThrottleSeconds: 15 };
       const devices = (await window?.trayApp?.getDevices()) ?? [];
 
       const runAtStartupCheckbox = document.getElementById('run_at_startup_checkbox');
       runAtStartupCheckbox.checked = settings.runAtStartup;
 
       const listDevices = document.getElementById('list_devices');
-      for(var i = 0; i < devices.length; i++){
+      for (var i = 0; i < devices.length; i++) {
         var device = devices[i];
-        listDevices.options.add(new Option(device.name, device.handle, false, settings.deviceShow?.toString() == device.handle));
+        listDevices.options.add(new Option(device.name, device.handle, false, settings.shownDeviceHandle?.toString() == device.handle));
       }
 
       const throttleSelect = document.getElementById('polling_throttle');
@@ -74,10 +74,9 @@
 
       listDevices.addEventListener('change', async (event) => {
         const selectedValue = event.target.value;
-        await window?.trayApp?.updateSettings({ deviceShow: selectedValue });
+        await window?.trayApp?.updateSettings({ shownDeviceHandle: selectedValue });
         console.log(`Selected list devices: ${selectedValue}`);
       });
-
 
       throttleSelect.addEventListener('change', async (event) => {
         const selectedValue = event.target.value;

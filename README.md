@@ -13,7 +13,7 @@ Inspired by [Tekk-Know/RazerBatteryTaskbar](https://github.com/Tekk-Know/RazerBa
 
 ## Requirements
 
-* Windows (tested on Windows 11)
+* Windows (tested on Windows 10 & 11)
 * Razer Synapse 3 running in the background
 * _Optional: node.js (compile time)_
 
@@ -23,16 +23,20 @@ Run the setup exe. After installation the app will show its icon on the taskbar.
 
 ## Supported Hardware
 
-* Razer Blackshark V2 Pro (2023)
 * Potentially any wireless Razer device if its battery state gets logged into  
 `%LOCALAPPDATA%\Razer\Synapse3\Log\Razer Synapse 3.log`
-
+* tested with Razer Blackshark V2 Pro (2023)
 
 ## Compiling
 
 * `npm install`
 * `npm run make`
 * Setup exe will be created in the `out\make` directory.
+
+## How it works
+
+The app is monitoring `%LOCALAPPDATA%\Razer\Synapse3\Log\Razer Synapse 3.log` and reads the content on every change throttled by the "Maximum delay between battery status updates" setting. The code is looking for `OnBatteryLevelChanged`, `OnDeviceLoaded` and `OnDeviceRemoved` events, and parses the latest state of each device using the regexps defined in [`razer_watcher.ts`](https://github.com/sanraith/razer-taskbar/blob/064479012c2585abe8d266e9fd33db668623355a/src/razer_watcher.ts#L39-L41).
+If the log format of Razer Synapse changes, these expressions will need to be updated.
 
 ## Attributions
 

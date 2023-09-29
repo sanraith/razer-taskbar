@@ -23,7 +23,7 @@ export default class RazerWatcher {
             this.stop();
             this.start();
         });
-        settingsChanges.on('deviceShow', () => {
+        settingsChanges.on('shownDeviceHandle', () => {
             this.stop();
             this.start();
         });
@@ -31,9 +31,9 @@ export default class RazerWatcher {
 
     start() {
         getSettings().then(settings => {
-            const throttledOnLogChanged = _.throttle(() => this.onLogChanged(settings.deviceShow), settings.pollingThrottleSeconds, { leading: true });
+            const throttledOnLogChanged = _.throttle(() => this.onLogChanged(settings.shownDeviceHandle), settings.pollingThrottleSeconds, { leading: true });
             this.watcher = fs.watch(this.logPath, throttledOnLogChanged);
-            this.onLogChanged(settings.deviceShow);
+            this.onLogChanged(settings.shownDeviceHandle);
         });
     }
 
@@ -43,10 +43,10 @@ export default class RazerWatcher {
     }
 
     listDevices(): RazerDevice[] {
-        return [...devices.values()]
+        return [...devices.values()];
     }
 
-    private async onLogChanged(deviceShow: string): Promise<RazerDevice[]> {
+    private async onLogChanged(shownDeviceHandle: string): Promise<RazerDevice[]> {
         const batteryStateRegex = /^(?<dateTime>.+?) INFO.+?_OnBatteryLevelChanged[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)[\s\S]*?level (?<level>\d+) state (?<isCharging>\d+)/gm;
         const deviceLoadedRegex = /^(?<dateTime>.+?) INFO.+?_OnDeviceLoaded[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)/gm;
         const deviceRemovedRegex = /^(?<dateTime>.+?) INFO.+?_OnDeviceRemoved[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)/gm;
@@ -62,7 +62,7 @@ export default class RazerWatcher {
                 batteryPercentage: parseInt(level),
                 isCharging: parseInt(isCharging) !== 0,
                 isConnected: false,
-                isSelected: deviceShow === handle || deviceShow == ''
+                isSelected: shownDeviceHandle === handle || shownDeviceHandle == ''
             });
         }
 

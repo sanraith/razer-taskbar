@@ -1,4 +1,4 @@
-import { Menu, MenuItem, MenuItemConstructorOptions, NativeImage, Tray, app, nativeImage } from 'electron';
+import { Menu, MenuItem, MenuItemConstructorOptions, NativeImage, Tray, nativeImage } from 'electron';
 import { RazerDevice } from './razer_watcher';
 import { assertNever } from './utils';
 import { BATTERY_CHARGING_IMAGE_PATHS, BATTERY_IMAGE_PATHS } from './resources';
@@ -74,7 +74,7 @@ export default class TrayManager {
                 : devices.map(device => ({ label: `🔗 ${device.name} - ${device.batteryPercentage}%${device.isCharging ? ' (charging)' : ''}`, type: 'normal', enabled: false }));
 
             const menu = Menu.buildFromTemplate([
-                { label: '--- Razer Taskbar ---', type: 'normal', enabled: false },
+                { label: '⎯⎯⎯⎯  Razer Taskbar  ⎯⎯⎯⎯', type: 'normal', enabled: false },
                 ...deviceStatusMenuItems,
                 { type: 'separator' },
                 ...this.staticMenuItems,
@@ -97,10 +97,10 @@ export default class TrayManager {
     }
 }
 
-/** Pick the device with the lowest battery, preferring ones that are not charging. */
+/** Pick the user selected device, or with the lowest battery, preferring ones that are not charging. */
 function pickDeviceToDisplay(devices: RazerDevice[]): RazerDevice | undefined {
-    const sortChargingPercent = (a:any, b:any) => a.batteryPercentage * (a.isCharging ? 100 : 1) - b.batteryPercentage * (b.isCharging ? 100 : 1)
-    return devices.filter((e) => e.isSelected).sort(sortChargingPercent)[0]
+    const sortChargingPercent = (a: RazerDevice, b: RazerDevice) => a.batteryPercentage * (a.isCharging ? 100 : 1) - b.batteryPercentage * (b.isCharging ? 100 : 1);
+    return devices.filter((e) => e.isSelected).sort(sortChargingPercent)[0];
 }
 
 function getTrayIcon(device?: RazerDevice) {
