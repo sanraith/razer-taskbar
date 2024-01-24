@@ -99,7 +99,8 @@ export default class TrayManager {
 
 /** Pick the device with the lowest battery, preferring ones that are not charging. */
 function pickDeviceToDisplay(devices: RazerDevice[]): RazerDevice | undefined {
-    return devices.sort((a, b) => a.batteryPercentage * (a.isCharging ? 100 : 1) - b.batteryPercentage * (b.isCharging ? 100 : 1))[0];
+    const sortChargingPercent = (a:any, b:any) => a.batteryPercentage * (a.isCharging ? 100 : 1) - b.batteryPercentage * (b.isCharging ? 100 : 1)
+    return devices.filter((e) => e.isSelected).sort(sortChargingPercent)[0]
 }
 
 function getTrayIcon(device?: RazerDevice) {
