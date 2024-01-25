@@ -7,6 +7,8 @@ import { AppSettings } from './settings_manager';
 contextBridge.exposeInMainWorld('trayApp', {
     updateSettings: async (changes: Partial<AppSettings>) => await ipcRenderer.invoke('updateSettings', changes),
     getSettings: async () => await ipcRenderer.invoke('getSettings'),
+    getDevices: async () => await ipcRenderer.invoke('getDevices'),
+
 
     nodeVersion: process.versions.node,
     chromeVersion: process.versions.chrome,

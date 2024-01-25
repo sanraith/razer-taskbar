@@ -16,7 +16,14 @@
           <input id="run_at_startup_checkbox" type="checkbox">
         </label>
       </p>
-
+      <p>
+        <label for="list_devices">
+          Device show:
+          <select id="list_devices" name="list_devices">
+            <option value="">Automatic</option>
+          </select>
+        </label>
+      </p>
       <p>
         <label for="polling_throttle">
           Maximum delay between battery status updates:
@@ -44,10 +51,17 @@
        *     runAtStartup: boolean;
        *     pollingThrottleSeconds: number;
        * }} */
-      const settings = (await window?.trayApp?.getSettings()) ?? { runAtStartup: false, pollingThrottleSeconds: 15 };
+      const settings = (await window?.trayApp?.getSettings()) ?? { deviceShow: '', runAtStartup: false, pollingThrottleSeconds: 15 };
+      const devices = (await window?.trayApp?.getDevices()) ?? [];
 
       const runAtStartupCheckbox = document.getElementById('run_at_startup_checkbox');
       runAtStartupCheckbox.checked = settings.runAtStartup;
+
+      const listDevices = document.getElementById('list_devices');
+      for(var i = 0; i < devices.length; i++){
+        var device = devices[i];
+        listDevices.options.add(new Option(device.name, device.handle, false, settings.deviceShow?.toString() == device.handle));
+      }
 
       const throttleSelect = document.getElementById('polling_throttle');
       throttleSelect.value = settings.pollingThrottleSeconds.toString();
@@ -57,6 +71,13 @@
         await window?.trayApp?.updateSettings({ runAtStartup: isChecked });
         console.log(`Run at startup status: ${isChecked}`);
       });
+
+      listDevices.addEventListener('change', async (event) => {
+        const selectedValue = event.target.value;
+        await window?.trayApp?.updateSettings({ deviceShow: selectedValue });
+        console.log(`Selected list devices: ${selectedValue}`);
+      });
+
 
       throttleSelect.addEventListener('change', async (event) => {
         const selectedValue = event.target.value;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import RazerWatcher from './razer_watcher';
 import TrayManager from './tray_manager';
@@ -49,14 +49,17 @@ const createSettingsWindow = (): void => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+app.on('ready', async () => {
   const trayManager = new TrayManager([
     { label: 'Settings', type: 'normal', click: () => createSettingsWindow() },
     { label: 'Quit', type: 'normal', click: () => quit() }
   ]);
 
   const razerWatcher = new RazerWatcher(trayManager, path.resolve(process.env.LOCALAPPDATA, 'Razer', 'Synapse3', 'Log', 'Razer Synapse 3.log'));
-  razerWatcher.start();
+  razerWatcher.start()
+  ipcMain.handle('getDevices', () => {
+    return razerWatcher.listDevices()
+  })
 
   settingsChanges.on('_defaultSettingsCreated', () => createSettingsWindow());
   settingsChanges.on('runAtStartup', async value => app.setLoginItemSettings({ openAtLogin: value }));

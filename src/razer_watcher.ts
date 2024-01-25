@@ -10,7 +10,10 @@ export interface RazerDevice {
     batteryPercentage: number;
     isCharging: boolean;
     isConnected: boolean;
+    isSelected: boolean;
 }
+
+const devices: Map<string, RazerDevice> = new Map();
 
 export default class RazerWatcher {
     private watcher: fs.FSWatcher | null = null;
@@ -20,13 +23,17 @@ export default class RazerWatcher {
             this.stop();
             this.start();
         });
+        settingsChanges.on('deviceShow', () => {
+            this.stop();
+            this.start();
+        });
     }
 
     start() {
         getSettings().then(settings => {
-            const throttledOnLogChanged = _.throttle(() => this.onLogChanged(), settings.pollingThrottleSeconds, { leading: true });
+            const throttledOnLogChanged = _.throttle(() => this.onLogChanged(settings.deviceShow), settings.pollingThrottleSeconds, { leading: true });
             this.watcher = fs.watch(this.logPath, throttledOnLogChanged);
-            this.onLogChanged();
+            this.onLogChanged(settings.deviceShow);
         });
     }
 
@@ -35,12 +42,15 @@ export default class RazerWatcher {
         this.watcher = null;
     }
 
-    private async onLogChanged(): Promise<RazerDevice[]> {
+    listDevices(): RazerDevice[] {
+        return [...devices.values()]
+    }
+
+    private async onLogChanged(deviceShow: string): Promise<RazerDevice[]> {
         const batteryStateRegex = /^(?<dateTime>.+?) INFO.+?_OnBatteryLevelChanged[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)[\s\S]*?level (?<level>\d+) state (?<isCharging>\d+)/gm;
         const deviceLoadedRegex = /^(?<dateTime>.+?) INFO.+?_OnDeviceLoaded[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)/gm;
         const deviceRemovedRegex = /^(?<dateTime>.+?) INFO.+?_OnDeviceRemoved[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)/gm;
 
-        const devices: Map<string, RazerDevice> = new Map();
         const log = await fsa.readFile(this.logPath, { encoding: 'utf8' });
 
         const batteryStateMatches = getLastMatchByHandle(batteryStateRegex, log);
@@ -51,7 +61,8 @@ export default class RazerWatcher {
                 handle,
                 batteryPercentage: parseInt(level),
                 isCharging: parseInt(isCharging) !== 0,
-                isConnected: false
+                isConnected: false,
+                isSelected: deviceShow === handle || deviceShow == ''
             });
         }
 
