@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'path';
 import RazerWatcher from './razer_watcher';
 import TrayManager from './tray_manager';
 import { getSettings, settingsChanges } from './settings_manager';
@@ -55,11 +54,11 @@ app.on('ready', async () => {
     { label: 'Quit', type: 'normal', click: () => quit() }
   ]);
 
-  const razerWatcher = new RazerWatcher(trayManager, path.resolve(process.env.LOCALAPPDATA, 'Razer', 'Synapse3', 'Log', 'Razer Synapse 3.log'));
-  razerWatcher.start()
+  const razerWatcher = new RazerWatcher(trayManager);
+  razerWatcher.start();
   ipcMain.handle('getDevices', () => {
-    return razerWatcher.listDevices()
-  })
+    return razerWatcher.listDevices();
+  });
 
   settingsChanges.on('_defaultSettingsCreated', () => createSettingsWindow());
   settingsChanges.on('runAtStartup', async value => app.setLoginItemSettings({ openAtLogin: value }));

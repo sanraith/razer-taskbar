@@ -1,5 +1,31 @@
 <!DOCTYPE html>
 <html>
+<style>
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    top: 30px;
+    left: 30px;
+    visibility: hidden;
+    width: 300px;
+    background-color: #404040F0;
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+  }
+</style>
 
 <head>
   <meta charset="UTF-8" />
@@ -9,24 +35,57 @@
 <body>
   <div class="container">
     <h2>Razer Taskbar Settings</h2>
+    <p style="font-size: small; margin-top: -20px;">
+      v0.10.0
+    </p>
     <form>
       <p>
         <label for="run_at_startup_checkbox" style="display: contents;">
-          Run at startup
+          <div class="tooltip">
+            <span class="tooltiptext">Check this to automatically run the app on windows startup.</span>
+            Run at startup
+          </div>
           <input id="run_at_startup_checkbox" type="checkbox">
         </label>
       </p>
       <p>
         <label for="list_devices">
-          Show device:
+          <div class="tooltip">
+            <span class="tooltiptext">
+              Set the device to be shown on the taskbar if you have multiple Razer devices.
+            </span>
+            Show device:
+          </div>
           <select id="list_devices" name="list_devices">
-            <option value="">Automatic</option>
+            <option value="">Auto (lowest battery)</option>
+          </select>
+        </label>
+      </p>
+      <p>
+        <label for="synapse_version">
+          <div class="tooltip">
+            <span class="tooltiptext">The version of the installed Razer Synapse app where the battery
+              information is sourced from.
+            </span>
+            Razer Synapse version:
+          </div>
+          <select id="synapse_version" name="synapse_version">
+            <option value="auto">Auto</option>
+            <option value="v3">Version 3</option>
+            <option value="v4">Version 4</option>
           </select>
         </label>
       </p>
       <p>
         <label for="polling_throttle">
-          Maximum delay between battery status updates:
+          <div class="tooltip">
+            <span class="tooltiptext">
+              Longest delay between updates. A larger value means the battery status will be updated less often,
+              but the app will also use less resources.
+            </span>
+            Maximum battery update delay:
+          </div>
+
           <select id="polling_throttle" name="polling_throttle">
             <option value="1">1 second</option>
             <option value="5">5 seconds</option>
@@ -50,8 +109,10 @@
       /** @type {{
        *     runAtStartup: boolean;
        *     pollingThrottleSeconds: number;
+       *     shownDeviceHandle: string;
+       *     synapseVersion: 'auto' | 'v3' | 'v4';
        * }} */
-      const settings = (await window?.trayApp?.getSettings()) ?? { shownDeviceHandle: '', runAtStartup: false, pollingThrottleSeconds: 15 };
+      const settings = (await window?.trayApp?.getSettings()) ?? { shownDeviceHandle: '', runAtStartup: false, pollingThrottleSeconds: 15, synapseVersion: 'auto' };
       const devices = (await window?.trayApp?.getDevices()) ?? [];
 
       const runAtStartupCheckbox = document.getElementById('run_at_startup_checkbox');
@@ -66,6 +127,9 @@
       const throttleSelect = document.getElementById('polling_throttle');
       throttleSelect.value = settings.pollingThrottleSeconds.toString();
 
+      const synapseVersionSelect = document.getElementById('synapse_version');
+      synapseVersionSelect.value = settings.synapseVersion;
+
       runAtStartupCheckbox.addEventListener('change', async (event) => {
         const isChecked = event.target.checked;
         await window?.trayApp?.updateSettings({ runAtStartup: isChecked });
@@ -76,6 +140,12 @@
         const selectedValue = event.target.value;
         await window?.trayApp?.updateSettings({ shownDeviceHandle: selectedValue });
         console.log(`Selected list devices: ${selectedValue}`);
+      });
+
+      synapseVersionSelect.addEventListener('change', async (event) => {
+        const selectedValue = event.target.value;
+        await window?.trayApp?.updateSettings({ synapseVersion: selectedValue });
+        console.log(`Synapse version: ${selectedValue}`);
       });
 
       throttleSelect.addEventListener('change', async (event) => {

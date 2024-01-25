@@ -28,6 +28,7 @@ export interface AppSettings {
     runAtStartup: boolean;
     pollingThrottleSeconds: number;
     shownDeviceHandle: string;
+    synapseVersion: 'auto' | 'v3' | 'v4';
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -82,6 +83,7 @@ function createDefaultSettings(): AppSettings {
     return {
         runAtStartup: false,
         pollingThrottleSeconds: 15,
-        shownDeviceHandle: ''
+        shownDeviceHandle: '',
+        synapseVersion: 'auto'
     };
 }
