@@ -9,7 +9,7 @@ Inspired by [Tekk-Know/RazerBatteryTaskbar](https://github.com/Tekk-Know/RazerBa
 
 | ≥80% | ≥60% | ≥40% | ≥20% | ≥0% | unknown % |
 |:-:|:-:|:-:|:-:|:-:|:-:|
-![100%](src/assets/battery100_@2x.png) ![100% charging](src/assets/battery100_chrg_@2x.png)|![75%](src/assets/battery75_@2x.png) ![75% charging](src/assets/battery75_chrg_@2x.png)|![50%](src/assets/battery50_@2x.png) ![50% charging](src/assets/battery50_chrg_@2x.png)|![25%](src/assets/battery25_@2x.png) ![25% charging](src/assets/battery25_chrg_@2x.png)|![0%](src/assets/battery0_@2x.png) ![0% charging](src/assets/battery0_chrg_@2x.png)|![battery unknown](src/assets/battery_unknown_@2x.png)
+|![100%](src/assets/battery100_@2x.png) ![100% charging](src/assets/battery100_chrg_@2x.png)|![75%](src/assets/battery75_@2x.png) ![75% charging](src/assets/battery75_chrg_@2x.png)|![50%](src/assets/battery50_@2x.png) ![50% charging](src/assets/battery50_chrg_@2x.png)|![25%](src/assets/battery25_@2x.png) ![25% charging](src/assets/battery25_chrg_@2x.png)|![0%](src/assets/battery0_@2x.png) ![0% charging](src/assets/battery0_chrg_@2x.png)|![battery unknown](src/assets/battery_unknown_@2x.png)|
 
 ## Requirements
 
@@ -37,7 +37,7 @@ Run the setup exe. After installation the app will show its icon on the taskbar.
 The app is monitoring the logs of Razer Synapse. The monitored file is:
 
 * `%LOCALAPPDATA%\Razer\Synapse3\Log\Razer Synapse 3.log` for Razer Synapse 3
-* `%LOCALAPPDATA%\Razer\RazerAppEngine\User Data\systray_systrayv2.log` for Razer Synapse 4
+* `%LOCALAPPDATA%\Razer\RazerAppEngine\User Data\settings.log` for Razer Synapse 4
 
 The app reads the log content throttled by the "Maximum battery update delay" setting. The code is looking for connection and battery information in the logs, and parses the latest state of each device as defined in [`razer_watcher.ts`](https://github.com/sanraith/razer-taskbar/blob/main/src/razer_watcher.ts).
 If the log format of Razer Synapse changes, this file will need to be updated.

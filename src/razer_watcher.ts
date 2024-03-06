@@ -33,7 +33,7 @@ interface LoggedDeviceInfoV4 {
 }
 
 const SynapseV3LogPath = path.resolve(process.env.LOCALAPPDATA, 'Razer', 'Synapse3', 'Log', 'Razer Synapse 3.log');
-const SynapseV4LogPath = path.resolve(process.env.LOCALAPPDATA, 'Razer', 'RazerAppEngine', 'User Data', 'Logs', 'systray_systrayv2.log');
+const SynapseV4LogPath = path.resolve(process.env.LOCALAPPDATA, 'Razer', 'RazerAppEngine', 'User Data', 'Logs', 'settings.log');
 const devices: Map<string, RazerDevice> = new Map();
 
 export default class RazerWatcher {
@@ -149,7 +149,7 @@ export default class RazerWatcher {
     private async onLogChangedV4(settings: AppSettings): Promise<void> {
         const start = performance.now();
         const shownDeviceHandle = settings.shownDeviceHandle;
-        const batteryStateRegex = /^\[(?<timestamp>.+?)\].*connectingDeviceData: (?<json>.+)$/gm;
+        const batteryStateRegex = /^\[(?<timestamp>.+?)\].*connectedDeviceData: (?<json>.+)$/gm;
         try {
             const matches: { timestamp: string, jsonStr: string; info: LoggedDeviceInfoV4[]; }[] = [];
             const log = await fsa.readFile(SynapseV4LogPath, { encoding: 'utf8' });
