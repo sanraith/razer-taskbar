@@ -33,12 +33,13 @@ interface LoggedDeviceInfoV4 {
 }
 
 const SynapseV3LogPath = path.resolve(process.env.LOCALAPPDATA, 'Razer', 'Synapse3', 'Log', 'Razer Synapse 3.log');
-const SynapseV4LogPath = path.resolve(process.env.LOCALAPPDATA, 'Razer', 'RazerAppEngine', 'User Data', 'Logs', 'settings.log');
+const SynapseV4LogDir = path.resolve(process.env.LOCALAPPDATA, 'Razer', 'RazerAppEngine', 'User Data', 'Logs');
 const devices: Map<string, RazerDevice> = new Map();
 
 export default class RazerWatcher {
     private watcher: fs.FSWatcher | null = null;
     private watcherRetryTimeout: NodeJS.Timeout | null = null;
+    private synapseV4LogPath: string | null = null;
 
     constructor(private trayManager: TrayManager) {
         this.trayManager.onDeviceUpdate(devices);
@@ -61,7 +62,7 @@ export default class RazerWatcher {
     }
 
     stop() {
-        fs.unwatchFile(SynapseV4LogPath);
+        if (this.synapseV4LogPath) { fs.unwatchFile(this.synapseV4LogPath); }
         this.watcher?.close();
         this.watcher = null;
         if (this.watcherRetryTimeout) { clearTimeout(this.watcherRetryTimeout); }
@@ -72,33 +73,61 @@ export default class RazerWatcher {
         return [...devices.values()];
     }
 
+    private findLatestSynapseV4LogFile(): void {
+        this.synapseV4LogPath = null;
+        try {
+            if (!fs.existsSync(SynapseV4LogDir)) {
+                return;
+            }
+
+            const fileNameRegex = /^systray_systrayv2(?<index>\d*).log$/g;
+            const candidates = fs.readdirSync(SynapseV4LogDir).filter(x => fileNameRegex.test(x)).map(x => ({
+                fileName: x,
+                modifyTime: fs.statSync(path.resolve(SynapseV4LogDir, x)).mtime,
+                index: parseInt(fileNameRegex.exec(x).groups["index"] || "-1")
+            }));
+            if (candidates.length > 0) {
+                candidates.sort((a, b) => b.index - a.index);
+                console.log('Synapse V4 candidates:\n' + candidates.map(x => `- ${x.fileName} (${x.index}) ${x.modifyTime}`).join('\n'));
+
+                const fileName = candidates[0].fileName;
+                this.synapseV4LogPath = path.resolve(SynapseV4LogDir, fileName);
+                console.log(`Found Synapse 4 logFile: ${this.synapseV4LogPath}`);
+            }
+        } catch (e) {
+            console.log(`Error finding Synapse 4 log file: ${e}`);
+        }
+    }
+
     private startChangeHandler(settings: AppSettings) {
         const v3InitFunc = () => {
             console.log("init v3 change handler");
             const v3LogFunc = () => this.onLogChangedV3(settings);
             const throttledOnLogChanged = _.throttle(v3LogFunc, settings.pollingThrottleSeconds * 1000, { leading: true });
+
             this.watcher = fs.watch(SynapseV3LogPath, throttledOnLogChanged);
             v3LogFunc();
         };
+
         const v4InitFunc = () => {
             console.log("init v4 change handler");
-            const v4LogFunc = () => this.onLogChangedV4(settings);
+            if (!this.synapseV4LogPath) { throw new Error("Cannot start V4 change handler because V4 log path could not be resolved"); }
+
             // use fs.watchFile instead of fs.watch for V4 logs. We need polling here to get notified about the changes in time.
-            fs.watchFile(SynapseV4LogPath, { interval: settings.pollingThrottleSeconds * 1000 }, (curr) => {
+            const v4LogFunc = () => this.onLogChangedV4(settings);
+            fs.watchFile(this.synapseV4LogPath, { interval: settings.pollingThrottleSeconds * 1000 }, (curr) => {
                 console.log(`V4 log change detected ${curr.mtime}`);
                 v4LogFunc();
             });
             v4LogFunc();
         };
+
+        this.findLatestSynapseV4LogFile();
         switch (settings.synapseVersion) {
-            case 'auto': {
-                if (fs.existsSync(SynapseV4LogPath)) {
-                    v4InitFunc();
-                } else {
-                    v3InitFunc();
-                }
+            case 'auto':
+                if (this.synapseV4LogPath) { v4InitFunc(); }
+                else { v3InitFunc(); }
                 break;
-            }
             case 'v3': v3InitFunc(); break;
             case 'v4': v4InitFunc(); break;
         }
@@ -149,11 +178,12 @@ export default class RazerWatcher {
     private async onLogChangedV4(settings: AppSettings): Promise<void> {
         const start = performance.now();
         const shownDeviceHandle = settings.shownDeviceHandle;
-        const batteryStateRegex = /^\[(?<timestamp>.+?)\].*connectedDeviceData: (?<json>.+)$/gm;
+        const batteryStateRegex = /^\[(?<timestamp>.+?)\].*connectingDeviceData: (?<json>.+)$/gm;
         try {
             const matches: { timestamp: string, jsonStr: string; info: LoggedDeviceInfoV4[]; }[] = [];
-            const log = await fsa.readFile(SynapseV4LogPath, { encoding: 'utf8' });
+            const log = await fsa.readFile(this.synapseV4LogPath, { encoding: 'utf8' });
 
+            // Find log messages
             let match;
             while ((match = batteryStateRegex.exec(log))) {
                 matches.push({ timestamp: match.groups.timestamp, jsonStr: match.groups.json, info: null });
@@ -166,6 +196,7 @@ export default class RazerWatcher {
             }
             this.latestParsedTimeStamp = lastMatch.timestamp;
 
+            // Parse log messages
             for (const { jsonStr, info } of matches) {
                 try {
                     const lastDevices: LoggedDeviceInfoV4[] = info ?? JSON.parse(jsonStr);
@@ -184,6 +215,14 @@ export default class RazerWatcher {
                     console.error(`Error parsing log message: ${e}`);
                 }
             }
+
+            // Remove possible duplicate device if it's serial number eventually got resolved
+            const noSerial = 'NOSERIALNUMBER';
+            const noSerialDevice = devices.get(noSerial);
+            if (noSerialDevice && [...devices.values()].some(x => x.handle !== noSerial && x.name === noSerialDevice.name)) {
+                devices.delete(noSerial);
+            }
+
             console.log(`Parsed battery changes until ${lastMatch.timestamp} in ${(performance.now() - start).toFixed(2)} ms`);
             console.log(devices);
             this.trayManager.onDeviceUpdate(devices);
