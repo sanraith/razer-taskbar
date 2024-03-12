@@ -80,7 +80,7 @@ export default class RazerWatcher {
                 return;
             }
 
-            const fileNameRegex = /^systray_systrayv2(?<index>\d*).log$/g;
+            const fileNameRegex = /^systray_systrayv2(?<index>\d*).log$/;
             const candidates = fs.readdirSync(SynapseV4LogDir).filter(x => fileNameRegex.test(x)).map(x => ({
                 fileName: x,
                 modifyTime: fs.statSync(path.resolve(SynapseV4LogDir, x)).mtime,
