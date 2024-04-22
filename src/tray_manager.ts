@@ -1,5 +1,5 @@
 import { Menu, MenuItem, MenuItemConstructorOptions, NativeImage, Tray, nativeImage } from 'electron';
-import { RazerDevice } from './razer_watcher';
+import { RazerDevice } from './watcher/razer_watcher';
 import { assertNever } from './utils';
 import { BATTERY_CHARGING_IMAGE_PATHS, BATTERY_IMAGE_PATHS } from './resources';
 

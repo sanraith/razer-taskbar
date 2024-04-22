@@ -17,9 +17,7 @@ type MessageEvents = { [Property in keyof AppSettings]: (value: AppSettings[Prop
 export const settingsChanges = new SettingsEmitter() as TypedEventEmitter<MessageEvents>;
 
 // Handle updates from renderer
-ipcMain.handle('getSettings', async () => {
-    return await getSettings();
-});
+ipcMain.handle('getSettings', () => getSettings());
 ipcMain.handle('updateSettings', async (_, updates: Partial<AppSettings>) => {
     return await updateSettings(updates);
 });
@@ -31,22 +29,18 @@ export interface AppSettings {
     synapseVersion: 'auto' | 'v3' | 'v4';
 }
 
-export async function getSettings(): Promise<AppSettings> {
-    if (!_settings) {
-        await loadSettings();
-    }
-
+export function getSettings(): AppSettings {
     return { ..._settings };
 }
 
 export async function updateSettings(changes: Partial<AppSettings>) {
     console.log(changes);
-    _settings = { ...await getSettings(), ...changes };
+    _settings = { ...getSettings(), ...changes };
     Object.entries(changes).map(([k, v]) => settingsChanges.emit(k as keyof AppSettings, v));
     await saveSettings();
 }
 
-async function loadSettings() {
+export async function loadSettings() {
     _settings = createDefaultSettings();
 
     let settingsString = '';

@@ -37,7 +37,7 @@ Run the setup exe. After installation the app will show its icon on the taskbar.
 The app is monitoring the logs of Razer Synapse. The monitored file is:
 
 * `%LOCALAPPDATA%\Razer\Synapse3\Log\Razer Synapse 3.log` for Razer Synapse 3
-* `%LOCALAPPDATA%\Razer\RazerAppEngine\User Data\systray_systrayv2.log` for Razer Synapse 4
+* `%LOCALAPPDATA%\Razer\RazerAppEngine\User Data\Logs\systray_systrayv2.log` for Razer Synapse 4
 
 The app reads the log content throttled by the "Maximum battery update delay" setting. The code is looking for connection and battery information in the logs, and parses the latest state of each device as defined in [`razer_watcher.ts`](https://github.com/sanraith/razer-taskbar/blob/main/src/razer_watcher.ts).
 If the log format of Razer Synapse changes, this file will need to be updated.
