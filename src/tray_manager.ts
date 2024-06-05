@@ -2,6 +2,7 @@ import { Menu, MenuItem, MenuItemConstructorOptions, NativeImage, Tray, nativeIm
 import { RazerDevice } from './watcher/razer_watcher';
 import { assertNever } from './utils';
 import { BATTERY_CHARGING_IMAGE_PATHS, BATTERY_IMAGE_PATHS } from './resources';
+import { getSettings } from './settings_manager';
 
 interface TrayItem {
     tray: Tray;
@@ -108,8 +109,9 @@ function getTrayIcon(device?: RazerDevice) {
         return BATTERY_IMAGES.unknown;
     }
 
+    const shouldDisplayChargingState = getSettings().displayChargingState;
     const imagePercentage = Math.max(0, Math.min(4, Math.floor(device.batteryPercentage / 20))) * 25 as keyof BatteryImages;
-    return device.isCharging ?
+    return (shouldDisplayChargingState && device.isCharging) ?
         BATTERY_CHARGING_IMAGES[imagePercentage] :
         BATTERY_IMAGES[imagePercentage];
 }

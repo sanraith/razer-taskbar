@@ -25,6 +25,7 @@ ipcMain.handle('updateSettings', async (_, updates: Partial<AppSettings>) => {
 export interface AppSettings {
     runAtStartup: boolean;
     pollingThrottleSeconds: number;
+    displayChargingState: boolean;
     shownDeviceHandle: string;
     synapseVersion: 'auto' | 'v3' | 'v4';
 }
@@ -77,6 +78,7 @@ function createDefaultSettings(): AppSettings {
     return {
         runAtStartup: false,
         pollingThrottleSeconds: 15,
+        displayChargingState: true,
         shownDeviceHandle: '',
         synapseVersion: 'auto'
     };

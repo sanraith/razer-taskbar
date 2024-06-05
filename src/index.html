@@ -36,7 +36,7 @@
   <div class="container">
     <h2>Razer Taskbar Settings</h2>
     <p style="font-size: small; margin-top: -20px;">
-      v0.10.4
+      v0.11.0
     </p>
     <form>
       <p>
@@ -59,6 +59,15 @@
           <select id="list_devices" name="list_devices">
             <option value="">Auto (lowest battery)</option>
           </select>
+        </label>
+      </p>
+      <p>
+        <label for="display_charging_state_checkbox" style="display: contents;">
+          <div class="tooltip">
+            <span class="tooltiptext">Check this to display a charging icon when your device is charging.</span>
+            Display charging state
+          </div>
+          <input id="display_charging_state_checkbox" type="checkbox">
         </label>
       </p>
       <p>
@@ -109,14 +118,27 @@
       /** @type {{
        *     runAtStartup: boolean;
        *     pollingThrottleSeconds: number;
+       *     displayChargingState: boolean;
        *     shownDeviceHandle: string;
        *     synapseVersion: 'auto' | 'v3' | 'v4';
        * }} */
       const settings = (await window?.trayApp?.getSettings()) ?? { shownDeviceHandle: '', runAtStartup: false, pollingThrottleSeconds: 15, synapseVersion: 'auto' };
+      /** @type {{
+       *     name: string;
+       *     handle: string;
+       *     batteryPercentage: number;
+       *     isCharging: boolean;
+       *     isConnected: boolean;
+       *     isSelected: boolean;
+       * }[]} */
       const devices = (await window?.trayApp?.getDevices()) ?? [];
 
+      // Set initial values
       const runAtStartupCheckbox = document.getElementById('run_at_startup_checkbox');
       runAtStartupCheckbox.checked = settings.runAtStartup;
+
+      const displayChargingStateCheckbox = document.getElementById('display_charging_state_checkbox');
+      displayChargingStateCheckbox.checked = settings.displayChargingState;
 
       const listDevices = document.getElementById('list_devices');
       for (var i = 0; i < devices.length; i++) {
@@ -130,28 +152,22 @@
       const synapseVersionSelect = document.getElementById('synapse_version');
       synapseVersionSelect.value = settings.synapseVersion;
 
-      runAtStartupCheckbox.addEventListener('change', async (event) => {
-        const isChecked = event.target.checked;
-        await window?.trayApp?.updateSettings({ runAtStartup: isChecked });
-        console.log(`Run at startup status: ${isChecked}`);
-      });
+      // Set change handlers
+      const elements = [
+        { element: runAtStartupCheckbox, setting: 'runAtStartup', type: 'boolean' },
+        { element: listDevices, setting: 'shownDeviceHandle', type: 'string' },
+        { element: displayChargingStateCheckbox, setting: 'displayChargingState', type: 'boolean' },
+        { element: synapseVersionSelect, setting: 'synapseVersion', type: 'string' },
+        { element: throttleSelect, setting: 'pollingThrottleSeconds', type: 'number' },
+      ];
+      elements.forEach(({ element, setting, type }) => {
+        element.addEventListener('change', async (event) => {
+          let value = type === 'boolean' ? event.target.checked : event.target.value;
+          if (type === 'number') { value = parseInt(value); }
 
-      listDevices.addEventListener('change', async (event) => {
-        const selectedValue = event.target.value;
-        await window?.trayApp?.updateSettings({ shownDeviceHandle: selectedValue });
-        console.log(`Selected list devices: ${selectedValue}`);
-      });
-
-      synapseVersionSelect.addEventListener('change', async (event) => {
-        const selectedValue = event.target.value;
-        await window?.trayApp?.updateSettings({ synapseVersion: selectedValue });
-        console.log(`Synapse version: ${selectedValue}`);
-      });
-
-      throttleSelect.addEventListener('change', async (event) => {
-        const selectedValue = event.target.value;
-        await window?.trayApp?.updateSettings({ pollingThrottleSeconds: parseInt(selectedValue) });
-        console.log(`Selected throttle: ${selectedValue}`);
+          await window?.trayApp?.updateSettings({ [setting]: value });
+          console.log(`Updated ${setting}: ${value}`);
+        });
       });
     });
   </script>
