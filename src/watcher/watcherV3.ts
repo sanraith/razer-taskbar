@@ -36,7 +36,7 @@ export class WatcherV3 extends WatchProcess {
 
     private async onLogChangedV3(settings: AppSettings): Promise<void> {
         const shownDeviceHandle = settings.shownDeviceHandle;
-        const batteryStateRegex = /^(?<dateTime>.+?) INFO.+?_OnBatteryLevelChanged[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)[\s\S]*?level (?<level>\d+) state (?<isCharging>\d+)/gm;
+        const batteryStateRegex = /^(?<dateTime>.+?) INFO.+?Battery Get By Device Handle[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)[\s\S]*?Battery Percentage: (?<level>\d+)[\s\S]*?Battery State: (?<isCharging>.+)/gm;
         const deviceLoadedRegex = /^(?<dateTime>.+?) INFO.+?_OnDeviceLoaded[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)/gm;
         const deviceRemovedRegex = /^(?<dateTime>.+?) INFO.+?_OnDeviceRemoved[\s\S]*?Name: (?<name>.*)[\s\S]*?Handle: (?<handle>\d+)/gm;
 
@@ -50,7 +50,7 @@ export class WatcherV3 extends WatchProcess {
                     name,
                     handle,
                     batteryPercentage: parseInt(level),
-                    isCharging: parseInt(isCharging) !== 0,
+                    isCharging: isCharging == "Charging",
                     isConnected: false,
                     isSelected: shownDeviceHandle === handle || shownDeviceHandle === ''
                 });
