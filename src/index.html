@@ -36,7 +36,7 @@
   <div class="container">
     <h2>Razer Taskbar Settings</h2>
     <p style="font-size: small; margin-top: -20px;">
-      v0.11.0
+      v0.12.0
     </p>
     <form>
       <p>
@@ -46,6 +46,25 @@
             Run at startup
           </div>
           <input id="run_at_startup_checkbox" type="checkbox">
+        </label>
+      </p>
+      <p>
+        <label for="display_charging_state_checkbox" style="display: contents;">
+          <div class="tooltip">
+            <span class="tooltiptext">Check this to display a charging icon when your device is charging.</span>
+            Display charging state
+          </div>
+          <input id="display_charging_state_checkbox" type="checkbox">
+        </label>
+      </p>
+      <p>
+        <label for="show_percentage_checkbox" style="display: contents;">
+          <div class="tooltip">
+            <span class="tooltiptext">Check this to have the icon show the exact battery percentage instead of the
+              battery graphics.</span>
+            Display battery percentage
+          </div>
+          <input id="show_percentage_checkbox" type="checkbox">
         </label>
       </p>
       <p>
@@ -59,15 +78,6 @@
           <select id="list_devices" name="list_devices">
             <option value="">Auto (lowest battery)</option>
           </select>
-        </label>
-      </p>
-      <p>
-        <label for="display_charging_state_checkbox" style="display: contents;">
-          <div class="tooltip">
-            <span class="tooltiptext">Check this to display a charging icon when your device is charging.</span>
-            Display charging state
-          </div>
-          <input id="display_charging_state_checkbox" type="checkbox">
         </label>
       </p>
       <p>
@@ -117,6 +127,7 @@
     document.addEventListener('DOMContentLoaded', async function () {
       /** @type {{
        *     runAtStartup: boolean;
+       *     showPercentage: boolean;
        *     pollingThrottleSeconds: number;
        *     displayChargingState: boolean;
        *     shownDeviceHandle: string;
@@ -137,6 +148,9 @@
       const runAtStartupCheckbox = document.getElementById('run_at_startup_checkbox');
       runAtStartupCheckbox.checked = settings.runAtStartup;
 
+      const batteryPercentageCheckbox = document.getElementById('show_percentage_checkbox');
+      batteryPercentageCheckbox.checked = settings.showPercentage;
+
       const displayChargingStateCheckbox = document.getElementById('display_charging_state_checkbox');
       displayChargingStateCheckbox.checked = settings.displayChargingState;
 
@@ -155,6 +169,7 @@
       // Set change handlers
       const elements = [
         { element: runAtStartupCheckbox, setting: 'runAtStartup', type: 'boolean' },
+        { element: batteryPercentageCheckbox, setting: 'showPercentage', type: 'boolean' },
         { element: listDevices, setting: 'shownDeviceHandle', type: 'string' },
         { element: displayChargingStateCheckbox, setting: 'displayChargingState', type: 'boolean' },
         { element: synapseVersionSelect, setting: 'synapseVersion', type: 'string' },

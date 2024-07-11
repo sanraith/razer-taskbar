@@ -1,8 +1,9 @@
 import { Menu, MenuItem, MenuItemConstructorOptions, NativeImage, Tray, nativeImage } from 'electron';
 import { RazerDevice } from './watcher/razer_watcher';
 import { assertNever } from './utils';
-import { BATTERY_CHARGING_IMAGE_PATHS, BATTERY_IMAGE_PATHS } from './resources';
+import { BATTERY_CHARGING_IMAGE_PATHS, BATTERY_IMAGE_PATHS, NUMERIC_BATTERY_CHARGING_IMAGE_PATH, NUMERIC_BATTERY_IMAGE_PATH } from './resources';
 import { getSettings } from './settings_manager';
+import path from 'path';
 
 interface TrayItem {
     tray: Tray;
@@ -11,8 +12,22 @@ interface TrayItem {
 }
 
 type BatteryImages = { [Property in keyof typeof BATTERY_IMAGE_PATHS]: NativeImage };
+const batteryImageCache: Map<string, NativeImage> = new Map();
 const BATTERY_IMAGES = Object.fromEntries(Object.entries(BATTERY_IMAGE_PATHS).map(([k, v]) => [k, nativeImage.createFromPath(v)])) as BatteryImages;
 const BATTERY_CHARGING_IMAGES = Object.fromEntries(Object.entries(BATTERY_CHARGING_IMAGE_PATHS).map(([k, v]) => [k, nativeImage.createFromPath(v)])) as BatteryImages;
+const NUMERIC_BATTERY_IMAGES = function (percentage: number, showChargingIndicator: boolean) {
+    const basePath = showChargingIndicator ? NUMERIC_BATTERY_CHARGING_IMAGE_PATH : NUMERIC_BATTERY_IMAGE_PATH;
+    const percentageStr = Math.floor(percentage).toString().padStart(3, "0");
+    const iconPath = path.join(basePath, `battery${percentageStr}.png`);
+    let batteryIcon = batteryImageCache.get(iconPath);
+    if (!batteryIcon) {
+        batteryIcon = nativeImage.createFromPath(iconPath);
+        batteryImageCache.set(iconPath, batteryIcon);
+    }
+
+    return batteryIcon;
+};
+
 const NO_DEVICE_HANDLE = '00000000_HANDLE_NO_DEVICE';
 const SINGLE_TRAY_HANDLE = '00000001_HANDLE_SINGLE_TRAY';
 const TRAY_TITLE = "Razer Taskbar";
@@ -65,10 +80,10 @@ export default class TrayManager {
             trayItem.devices = [...connectedDevices.values()].sort((a, b) => a.name.localeCompare(b.name));
         }
         this.trayItems.set(trayItem.handle, trayItem);
-        this.updateTrayContents();
+        void this.updateTrayContents();
     }
 
-    updateTrayContents() {
+    async updateTrayContents() {
         for (const { tray, devices } of this.trayItems.values()) {
             const deviceStatusMenuItems: (MenuItemConstructorOptions | MenuItem)[] = devices.length === 0
                 ? [{ label: 'No devices found.', type: 'normal', enabled: false }]
@@ -83,7 +98,7 @@ export default class TrayManager {
             tray.setContextMenu(menu);
 
             const device = pickDeviceToDisplay(devices);
-            tray.setImage(getTrayIcon(device));
+            tray.setImage(await getTrayIcon(device));
             if (device) {
                 tray.setToolTip(`${device.name}: ${device.batteryPercentage}% ${device.isCharging ? '(charging)' : ''}`);
             } else {
@@ -104,16 +119,23 @@ function pickDeviceToDisplay(devices: RazerDevice[]): RazerDevice | undefined {
     return devices.filter((e) => e.isSelected).sort(sortChargingPercent)[0];
 }
 
-function getTrayIcon(device?: RazerDevice) {
+async function getTrayIcon(device?: RazerDevice) {
     if (!device) {
         return BATTERY_IMAGES.unknown;
     }
 
-    const shouldDisplayChargingState = getSettings().displayChargingState;
-    const imagePercentage = Math.max(0, Math.min(4, Math.floor(device.batteryPercentage / 20))) * 25 as keyof BatteryImages;
-    return (shouldDisplayChargingState && device.isCharging) ?
-        BATTERY_CHARGING_IMAGES[imagePercentage] :
-        BATTERY_IMAGES[imagePercentage];
+    const settings = getSettings();
+    const shouldDisplayChargingState = settings.displayChargingState;
+    const shouldDisplayNumericPercentage = settings.showPercentage;
+
+    if (shouldDisplayNumericPercentage) {
+        return NUMERIC_BATTERY_IMAGES(device.batteryPercentage, shouldDisplayNumericPercentage && device.isCharging);
+    } else {
+        const imagePercentage = Math.max(0, Math.min(4, Math.floor(device.batteryPercentage / 20))) * 25 as keyof BatteryImages;
+        return (shouldDisplayChargingState && device.isCharging) ?
+            BATTERY_CHARGING_IMAGES[imagePercentage] :
+            BATTERY_IMAGES[imagePercentage];
+    }
 }
 
 function createTray(): Tray {

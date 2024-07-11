@@ -22,3 +22,6 @@ export const BATTERY_CHARGING_IMAGE_PATHS = {
     100: path.join(ASSETS_PATH, 'battery100_chrg_@2x.png'),
     'unknown': path.join(ASSETS_PATH, 'battery_unknown_@2x.png')
 };
+
+export const NUMERIC_BATTERY_IMAGE_PATH = path.join(ASSETS_PATH, "numeric-icon");
+export const NUMERIC_BATTERY_CHARGING_IMAGE_PATH = path.join(ASSETS_PATH, "numeric-icon-chrg");

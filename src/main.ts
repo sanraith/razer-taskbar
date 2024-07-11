@@ -62,6 +62,7 @@ app.on('ready', async () => {
   settingsChanges.on('_defaultSettingsCreated', () => isFirstTimeLaunch = true);
   settingsChanges.on('runAtStartup', async value => app.setLoginItemSettings({ openAtLogin: value }));
   settingsChanges.on('displayChargingState', () => trayManager.updateTrayContents());
+  settingsChanges.on('showPercentage', () => trayManager.updateTrayContents());
   await loadSettings();
 
   razerWatcher = new RazerWatcher(trayManager);

@@ -24,6 +24,7 @@ ipcMain.handle('updateSettings', async (_, updates: Partial<AppSettings>) => {
 
 export interface AppSettings {
     runAtStartup: boolean;
+    showPercentage: boolean;
     pollingThrottleSeconds: number;
     displayChargingState: boolean;
     shownDeviceHandle: string;
@@ -77,6 +78,7 @@ function assertSettings(settings: AppSettings) {
 function createDefaultSettings(): AppSettings {
     return {
         runAtStartup: false,
+        showPercentage: false,
         pollingThrottleSeconds: 15,
         displayChargingState: true,
         shownDeviceHandle: '',
