@@ -9,7 +9,7 @@ export const mainConfig: Configuration = {
    * This is the main entry point for your application, it's the first file
    * that runs in the main process.
    */
-  entry: './src/main.ts',
+  entry: './src/main/index.ts',
   // Put your normal webpack config below here
   module: {
     rules,
@@ -21,7 +21,7 @@ export const mainConfig: Configuration = {
     new CopyPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, 'src', 'assets'),
+          from: path.resolve(__dirname, 'assets'),
           to: path.resolve(__dirname, '.webpack/main/assets')
         }
       ]

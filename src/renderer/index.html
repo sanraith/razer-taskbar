@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Razer Taskbar</title>
+</head>
+
+<body>
+  <header class="titlebar">
+    <svg class="titlebar-logo" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="1" y="4.5" width="12" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" />
+      <rect x="13.4" y="6.5" width="1.6" height="3" rx="0.8" fill="currentColor" />
+      <rect x="2.8" y="6.3" width="6.5" height="3.4" rx="0.8" fill="var(--accent)" />
+    </svg>
+    <span class="titlebar-title">Razer Taskbar</span>
+  </header>
+
+  <main class="content">
+    <!-- Live device status -->
+    <section class="hero card" id="hero" data-state="unknown" aria-live="polite">
+      <div class="hero-battery" aria-hidden="true">
+        <div class="hero-battery-body">
+          <div class="hero-battery-fill" id="hero_fill"></div>
+          <svg class="hero-bolt" viewBox="0 0 24 24">
+            <path d="M13.5 2 4.5 13.6h6.4L9.8 22l9.7-12.2h-6.5z" />
+          </svg>
+        </div>
+        <div class="hero-battery-nub"></div>
+      </div>
+      <div class="hero-text">
+        <div class="hero-name" id="hero_name">Looking for devices…</div>
+        <div class="hero-percent"><span id="hero_percent">--</span><span class="hero-unit">%</span></div>
+        <div class="hero-meta">
+          <span class="chip" id="hero_chip">Waiting for Razer Synapse</span>
+          <span class="hero-updated" id="hero_updated"></span>
+        </div>
+      </div>
+    </section>
+    <div class="other-devices" id="other_devices"></div>
+
+    <!-- Taskbar icon -->
+    <h2 class="section-title">Taskbar icon</h2>
+    <div class="card-group">
+      <div class="card row stacked">
+        <div class="row-text">
+          <div class="row-title">Icon style</div>
+          <div class="row-desc">How the battery appears next to the clock.</div>
+        </div>
+        <div class="style-picker" role="radiogroup" aria-label="Icon style">
+          <label class="style-option">
+            <input type="radio" name="icon_style" value="battery" />
+            <span class="style-card">
+              <span class="taskbar-swatch" id="preview_battery"></span>
+              <span class="style-label">Battery</span>
+              <span class="style-sub">Pixel-sharp, like the tray icons</span>
+            </span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="icon_style" value="number" />
+            <span class="style-card">
+              <span class="taskbar-swatch" id="preview_number"></span>
+              <span class="style-label">Percentage</span>
+              <span class="style-sub">Exact number, colour shows state</span>
+            </span>
+          </label>
+        </div>
+      </div>
+      <label class="card row" for="display_charging_state">
+        <div class="row-text">
+          <div class="row-title">Show charging indicator</div>
+          <div class="row-desc">Adds a bolt to the icon while the device charges.</div>
+        </div>
+        <input class="toggle" type="checkbox" role="switch" id="display_charging_state" />
+      </label>
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Device on taskbar</div>
+          <div class="row-desc">Pick one, or let the app show whichever needs attention most.</div>
+        </div>
+        <select id="shown_device"></select>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <h2 class="section-title">Notifications</h2>
+    <div class="card-group">
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Low battery</div>
+          <div class="row-desc">Notify once when the level drops to the threshold.</div>
+        </div>
+        <div class="row-controls">
+          <select id="low_threshold" aria-label="Low battery threshold"></select>
+          <input class="toggle" type="checkbox" role="switch" id="notify_low" aria-label="Low battery notification" />
+        </div>
+      </div>
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Critical battery</div>
+          <div class="row-desc">A second, more urgent reminder.</div>
+        </div>
+        <div class="row-controls">
+          <select id="critical_threshold" aria-label="Critical battery threshold"></select>
+          <input class="toggle" type="checkbox" role="switch" id="notify_critical"
+            aria-label="Critical battery notification" />
+        </div>
+      </div>
+      <label class="card row" for="notify_full">
+        <div class="row-text">
+          <div class="row-title">Fully charged</div>
+          <div class="row-desc">Notify when a charging device reaches 100%.</div>
+        </div>
+        <input class="toggle" type="checkbox" role="switch" id="notify_full" />
+      </label>
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Test notifications</div>
+          <div class="row-desc">Check that Windows shows alerts from this app (Focus Assist can hide them).</div>
+        </div>
+        <button class="button" id="test_notification" type="button">Send test</button>
+      </div>
+    </div>
+
+    <!-- General -->
+    <h2 class="section-title">General</h2>
+    <div class="card-group">
+      <label class="card row" for="run_at_startup">
+        <div class="row-text">
+          <div class="row-title">Start with Windows</div>
+          <div class="row-desc">Launch in the tray when you sign in.</div>
+        </div>
+        <input class="toggle" type="checkbox" role="switch" id="run_at_startup" />
+      </label>
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Razer Synapse version</div>
+          <div class="row-desc">Where battery information is read from.</div>
+        </div>
+        <select id="synapse_version">
+          <option value="auto">Detect automatically</option>
+          <option value="v4">Synapse 4</option>
+          <option value="v3">Synapse 3</option>
+        </select>
+      </div>
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Check for changes every</div>
+          <div class="row-desc">Only new log lines are read, so short intervals are cheap.</div>
+        </div>
+        <select id="polling_throttle">
+          <option value="1">1 second</option>
+          <option value="5">5 seconds</option>
+          <option value="15">15 seconds</option>
+          <option value="30">30 seconds</option>
+          <option value="60">1 minute</option>
+          <option value="300">5 minutes</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- About -->
+    <h2 class="section-title">About</h2>
+    <div class="card-group">
+      <div class="card row">
+        <div class="row-text">
+          <div class="row-title">Razer Taskbar <span id="app_version"></span></div>
+          <div class="row-desc">Reads battery levels from Razer Synapse logs. Synapse must be running.</div>
+        </div>
+        <div class="row-controls">
+          <button class="button subtle" id="open_logs" type="button">Synapse logs</button>
+          <button class="button subtle" id="open_github" type="button">GitHub</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+
+</html>

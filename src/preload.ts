@@ -1,16 +1,22 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import { contextBridge, ipcRenderer } from 'electron';
-import { AppSettings } from './settings_manager';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import type { AppSettings, IconPreviewRequest, RazerDevice, TrayAppApi } from './shared/types';
 
-contextBridge.exposeInMainWorld('trayApp', {
-    updateSettings: async (changes: Partial<AppSettings>) => await ipcRenderer.invoke('updateSettings', changes),
-    getSettings: async () => await ipcRenderer.invoke('getSettings'),
-    getDevices: async () => await ipcRenderer.invoke('getDevices'),
+const api: TrayAppApi = {
+    getSettings: () => ipcRenderer.invoke('getSettings'),
+    updateSettings: (changes: Partial<AppSettings>) => ipcRenderer.invoke('updateSettings', changes),
+    getDevices: () => ipcRenderer.invoke('getDevices'),
+    onDevicesChanged: (callback: (devices: RazerDevice[]) => void) => {
+        const listener = (_: IpcRendererEvent, devices: RazerDevice[]) => callback(devices);
+        ipcRenderer.on('devicesChanged', listener);
+        return () => { ipcRenderer.removeListener('devicesChanged', listener); };
+    },
+    renderIcon: (request: IconPreviewRequest) => ipcRenderer.invoke('renderIcon', request),
+    getAppInfo: () => ipcRenderer.invoke('getAppInfo'),
+    sendTestNotification: () => ipcRenderer.invoke('sendTestNotification'),
+    openExternal: (target: 'github' | 'logs') => ipcRenderer.invoke('openExternal', target),
+};
 
-
-    nodeVersion: process.versions.node,
-    chromeVersion: process.versions.chrome,
-    electronVersion: process.versions.electron
-});
+contextBridge.exposeInMainWorld('trayApp', api);
