@@ -1,5 +1,7 @@
 # razer-taskbar
 
+[![Download](https://img.shields.io/github/v/release/sanraith/razer-taskbar?label=Download&style=for-the-badge)](https://github.com/sanraith/razer-taskbar/releases/latest)
+
 ## Summary
 
 Display the battery state of Razer products using log messages from Razer Synapse.
@@ -19,7 +21,18 @@ Inspired by [Tekk-Know/RazerBatteryTaskbar](https://github.com/Tekk-Know/RazerBa
 
 ## Installation
 
-Run the setup exe. After installation the app will show its icon on the taskbar. Use the Settings menu to configure automatic startup if needed.
+1. Download `RazerTaskbarSetup_v[version].exe` from the [latest release](https://github.com/sanraith/razer-taskbar/releases/latest).
+2. Run it. Windows may show a SmartScreen warning (see below).
+3. After installation the app will show its icon on the taskbar. Use the Settings menu to configure automatic startup if needed.
+
+### Windows SmartScreen warning
+
+When you first run the exe, Windows Defender SmartScreen may show:
+> *"Windows protected your PC. Microsoft Defender SmartScreen prevented an unrecognized app from starting."*
+
+This is expected. The exe is unsigned (no paid code-signing certificate), so Windows flags it until the file builds a reputation. The source code is fully visible in this repository.
+
+**To proceed:** click **More info**, then **Run anyway**.
 
 ## Supported Hardware
 
@@ -28,9 +41,16 @@ Run the setup exe. After installation the app will show its icon on the taskbar.
 
 ## Compiling
 
-* `npm install`
+`canvas` is only needed for `npm run image-gen` and does not build on newer Node versions, so install scripts are skipped and the required ones are run manually:
+
+* `npm ci --ignore-scripts`
+* `npm rebuild electron electron-winstaller`
 * `npm run make`
 * Setup exe will be created in the `out\make` directory.
+
+### Releasing
+
+Pushing a tag matching the version in `package.json` (e.g. `v0.12.0`) builds the setup exe with GitHub Actions and attaches it to a new release.
 
 ## How it works
 

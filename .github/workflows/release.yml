@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check tag matches package.json version
+        shell: powershell
+        run: |
+          $pkgVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tagVersion = "${{ github.ref_name }}".TrimStart('v')
+          if ($pkgVersion -ne $tagVersion) {
+            Write-Error "Tag ${{ github.ref_name }} does not match package.json version $pkgVersion"
+            exit 1
+          }
+
+      # canvas is only used by utils/generateImages.ts and is not part of the app,
+      # so install scripts are skipped and only the ones needed for the build are run.
+      - name: Install dependencies
+        shell: powershell
+        run: |
+          npm ci --ignore-scripts
+          npm rebuild electron electron-winstaller
+
+      - name: Build RazerTaskbarSetup_${{ github.ref_name }}.exe
+        shell: powershell
+        run: |
+          npm run make
+          $setup = Get-ChildItem out\make\squirrel.windows -Recurse -Filter "*Setup.exe" | Select-Object -First 1
+          Copy-Item $setup.FullName ".\RazerTaskbarSetup_${{ github.ref_name }}.exe"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: RazerTaskbarSetup_v*.exe
+          generate_release_notes: true
