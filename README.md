@@ -1,5 +1,9 @@
 # razer-taskbar
 
+## --- Archived ---
+
+I dont have a Razer headset anymore so I am not able to update/test this repository anymore.
+
 ## Summary
 
 Display the battery state of Razer products using log messages from Razer Synapse.
